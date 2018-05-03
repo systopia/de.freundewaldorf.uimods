@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<extension key="de.freundewaldorf.uimods" type="module">
+  <file>uimods</file>
+  <name>Freunde Waldorf UI modifications</name>
+  <description>User interface modifications and custom functionality for Freunde Waldorf CiviCRM.</description>
+  <license>AGPL-3.0</license>
+  <maintainer>
+    <author>SYSTOPIA</author>
+    <email>info@systopia.de</email>
+  </maintainer>
+  <urls>
+    <url desc="Main Extension Page">http://github.com/systopia/de.freundewaldorf.uimods</url>
+    <url desc="Documentation">http://github.com/systopia/de.freundewaldorf.uimods/blob/master/README.md</url>
+    <url desc="Support">http://github.com/systopia/de.freundewaldorf.uimods/issues</url>
+    <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
+  </urls>
+  <releaseDate>2018-05-03</releaseDate>
+  <version>0.1-dev</version>
+  <develStage>dev</develStage>
+  <compatibility>
+    <ver>4.7</ver>
+  </compatibility>
+  <comments></comments>
+  <civix>
+    <namespace>CRM/Uimods</namespace>
+  </civix>
+</extension>
