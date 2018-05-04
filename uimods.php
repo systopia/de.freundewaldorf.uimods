@@ -124,6 +124,22 @@ function uimods_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 }
 
 /**
+ * Implements hook_civicrm_pre().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
+ */
+function uimods_civicrm_pre($op, $objectName, $id, &$params) {
+  if ($objectName == 'Individual') {
+    switch ($op) {
+      case 'create':
+      case 'edit':
+        CRM_Uimods_GenderPrefix::updateGenderOrPrefixParams($id, $params);
+        break;
+    }
+  }
+}
+
+/**
  * Implements hook_civicrm_summary().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_summary
