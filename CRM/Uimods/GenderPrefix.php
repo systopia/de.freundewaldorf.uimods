@@ -28,7 +28,7 @@ class CRM_Uimods_GenderPrefix {
    */
   public static function getGenderMapping() {
     $mapping = array(
-      'Female' => array('Frau', 'Ms.', 'Señora'),
+      'Female' => array('Frau', 'Ms.', 'Mrs.', 'Señora'),
       'Male'   => array('Herr', 'Mr.', 'Señor'),
     );
     $genders = array(
