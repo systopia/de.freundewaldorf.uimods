@@ -123,6 +123,23 @@ function uimods_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _uimods_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
+/**
+ * Implements hook_civicrm_summary().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_summary
+ */
+function uimods_civicrm_summary($contactID, &$content, &$contentPlacement = CRM_Utils_Hook::SUMMARY_BELOW) {
+  // Add JavaScript to the contact summary page.
+  $script = file_get_contents(__DIR__ . '/js/contact.js');
+  CRM_Core_Region::instance('page-body')->add(array(
+    'script' => $script,
+  ));
+
+  // Add the contact ID as a JavaScript variable on the contact summary page.
+  CRM_Core_Resources::singleton()->addVars('uimods', array('contactId' => $contactID));
+
+}
+
 // --- Functions below this ship commented out. Uncomment as required. ---
 
 /**
