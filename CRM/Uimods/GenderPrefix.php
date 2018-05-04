@@ -28,8 +28,8 @@ class CRM_Uimods_GenderPrefix {
    */
   public static function getGenderMapping() {
     $mapping = array(
-      'Female' => array('Frau'),
-      'Male'   => array('Herr'),
+      'Female' => array('Frau', 'Ms.', 'Señora'),
+      'Male'   => array('Herr', 'Mr.', 'Señor'),
     );
     $genders = array(
       'Male'   => CRM_Core_OptionGroup::getValue('gender', 'männlich', 'label'),
@@ -60,6 +60,7 @@ class CRM_Uimods_GenderPrefix {
    * @throws \Exception
    */
   public static function getPrefixMapping() {
+    // TODO: Refactor to take language into account.
     $mapping = array(
       'Frau' => array('weiblich'),
       'Herr'   => array('männlich'),
