@@ -4,6 +4,14 @@ require_once 'uimods.civix.php';
 use CRM_Uimods_ExtensionUtil as E;
 
 /**
+ * Adjust the API permissions for activities, see FW-9755
+ */
+function uimods_civicrm_alterAPIPermissions($entity, $action, &$params, &$permissions) {
+  $permissions['activity']['getcount'] = ['view all activities'];
+  $permissions['activity']['get']      = ['view all activities'];
+}
+
+/**
  * Implements hook_civicrm_config().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
