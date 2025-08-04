@@ -1,12 +1,19 @@
 <?php
 
+
+declare(strict_types = 1);
+
+// phpcs:disable PSR1.Files.SideEffects.FoundWithSymbols
 require_once 'uimods.civix.php';
 use CRM_Uimods_ExtensionUtil as E;
 
 /**
  * Adjust the API permissions for activities, see FW-9755
+ *
+ * @param array<string,string> $params
+ * @param array<string,array<string,array<string>>> $permissions
  */
-function uimods_civicrm_alterAPIPermissions($entity, $action, &$params, &$permissions) {
+function uimods_civicrm_alterAPIPermissions(string $entity, string $action, array &$params, array &$permissions): void {
   $permissions['activity']['getcount'] = ['view all activities'];
   $permissions['activity']['get']      = ['view all activities'];
 }
@@ -16,7 +23,7 @@ function uimods_civicrm_alterAPIPermissions($entity, $action, &$params, &$permis
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
  */
-function uimods_civicrm_config(&$config) {
+function uimods_civicrm_config(CRM_Core_Config &$config): void {
   _uimods_civix_civicrm_config($config);
 }
 
@@ -25,7 +32,7 @@ function uimods_civicrm_config(&$config) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
-function uimods_civicrm_install() {
+function uimods_civicrm_install(): void {
   _uimods_civix_civicrm_install();
 }
 
@@ -34,7 +41,7 @@ function uimods_civicrm_install() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
-function uimods_civicrm_enable() {
+function uimods_civicrm_enable(): void {
   _uimods_civix_civicrm_enable();
 }
 
@@ -42,12 +49,19 @@ function uimods_civicrm_enable() {
  * Implements hook_civicrm_pre().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_pre
+ * @param array<string,string> $params
+ *
+ *
  */
-function uimods_civicrm_pre($op, $objectName, $id, &$params) {
-  if ($objectName == 'Individual') {
+ // phpcs:ignore
+function uimods_civicrm_pre(string $op, string $objectName, ?int $id, array &$params): void {
+  if ('Individual' === $objectName) {
     switch ($op) {
       case 'create':
       case 'edit':
+        if (NULL === $id) {
+          return;
+        }
         CRM_Uimods_GenderPrefix::updateGenderOrPrefixParams($id, $params);
         break;
     }
@@ -59,41 +73,14 @@ function uimods_civicrm_pre($op, $objectName, $id, &$params) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_summary
  */
-function uimods_civicrm_summary($contactID, &$content, &$contentPlacement = CRM_Utils_Hook::SUMMARY_BELOW) {
+function uimods_civicrm_summary(int $contactID, mixed &$content,
+  int &$contentPlacement = CRM_Utils_Hook::SUMMARY_BELOW): void {
   // Add JavaScript to the contact summary page.
   $script = file_get_contents(__DIR__ . '/js/contact.js');
-  CRM_Core_Region::instance('page-body')->add(array(
+  CRM_Core_Region::instance('page-body')->add([
     'script' => $script,
-  ));
+  ]);
 
   // Add the contact ID as a JavaScript variable on the contact summary page.
-  CRM_Core_Resources::singleton()->addVars('uimods', array('contactId' => $contactID));
-
+  CRM_Core_Resources::singleton()->addVars('uimods', ['contactId' => $contactID]);
 }
-
-// --- Functions below this ship commented out. Uncomment as required. ---
-
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
- *
-
- // */
-
-/**
- * Implements hook_civicrm_navigationMenu().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
- *
-function uimods_civicrm_navigationMenu(&$menu) {
-  _uimods_civix_insert_navigation_menu($menu, NULL, array(
-    'label' => E::ts('The Page'),
-    'name' => 'the_page',
-    'url' => 'civicrm/the-page',
-    'permission' => 'access CiviReport,access CiviContribute',
-    'operator' => 'OR',
-    'separator' => 0,
-  ));
-  _uimods_civix_navigationMenu($menu);
-} // */
