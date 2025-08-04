@@ -15,6 +15,8 @@
 | written permission from the original author(s).        |
 +--------------------------------------------------------*/
 
+declare(strict_types = 1);
+
 /**
  * Class CRM_Uimods_GenderPrefix
  *
@@ -23,134 +25,170 @@
 class CRM_Uimods_GenderPrefix {
 
   /**
-   * @return array
-   * @throws \Exception
+   * will be invoked when gender type changes, then prefix name will be adjusted accordingly´
+   *
+   * @return array<string,string>
+   * @throws \RuntimeException
    */
-  public static function getGenderMapping() {
-    $mapping = array(
-      'Female' => array('Frau', 'Ms.', 'Mrs.', 'Señora'),
-      'Male'   => array('Herr', 'Mr.', 'Señor'),
-    );
-    $genders = array(
-      'Male'   => CRM_Core_OptionGroup::getValue('gender', 'männlich', 'label'),
-      'Female' => CRM_Core_OptionGroup::getValue('gender', 'weiblich', 'label')
-    );
-    if (empty($genders['Male']) || empty($genders['Female'])) {
-      throw new Exception("Gender 'männlich' or 'weiblich' could not be resolved.");
-    }
-    $prefix2gender = array();
-    foreach ($mapping as $gender_name => $prefixes) {
-      $gender_id = $genders[$gender_name];
-      foreach ($prefixes as $prefix_label) {
-        $prefix_id = CRM_Core_OptionGroup::getValue('individual_prefix', $prefix_label, 'label');
-        if (!empty($prefix_id)) {
-          $prefix2gender[$prefix_id] = $gender_id;
+  public static function getGenderMapping(): array {
+    $genderPrefixMapping = [
+      'Female' => ['Frau', 'Ms.', 'Mrs.', 'Señora'],
+      'Male'   => ['Herr', 'Mr.', 'Señor'],
+    ];
+
+    $allowedLabels = [
+      'Female' => ['Female', 'weiblich'],
+      'Male'   => ['Male', 'männlich'],
+    ];
+
+    /** var array<string,string> $genders */
+    $genders = [];
+    foreach ($allowedLabels as $genderName => $genderOptions) {
+      foreach ($genderOptions as $genderOption) {
+        $genderKey = CRM_Core_PseudoConstant::getKey('CRM_Contact_BAO_Contact', 'gender_id', $genderOption);
+        if (NULL !== $genderKey && '' !== (string) $genderKey) {
+          $genders[$genderName] = (string) $genderKey;
+          break;
         }
       }
     }
 
-    if (empty($prefix2gender)) {
-      throw new Exception("None of the prefixes could be resolved.");
+    if (!array_key_exists('Male', $genders) || !array_key_exists('Female', $genders)) {
+      throw new \RuntimeException("Gender 'männlich' or 'weiblich' could not be resolved.");
+    }
+
+    $prefix2gender = [];
+    foreach ($genderPrefixMapping as $genderName => $prefixes) {
+      $genderId = $genders[$genderName];
+      foreach ($prefixes as $prefixLabel) {
+        /** var bool|null|string|int $prefixId */
+        $prefixId = CRM_Core_PseudoConstant::getKey('CRM_Contact_BAO_Contact', 'prefix_id', $prefixLabel);
+        if (NULL !== $prefixId && '' !== (string) $prefixId) {
+          $prefix2gender[(string) $prefixId] = $genderId;
+        }
+      }
+    }
+
+    if (0 === count($prefix2gender)) {
+      throw new \RuntimeException('None of the prefixes could be resolved.');
     }
     return $prefix2gender;
   }
 
   /**
-   * @return array
-   * @throws \Exception
+   * @return array<string,string>
+   * @throws \RuntimeException
    */
-  public static function getPrefixMapping() {
-    // TODO: Refactor to take language into account.
-    $mapping = array(
-      'Frau' => array('weiblich'),
-      'Herr'   => array('männlich'),
-    );
-    $prefixes = array(
-      'Herr'   => CRM_Core_OptionGroup::getValue('individual_prefix', 'Herr', 'label'),
-      'Frau' => CRM_Core_OptionGroup::getValue('individual_prefix', 'Frau', 'label')
-    );
-    if (empty($prefixes['Herr']) || empty($prefixes['Frau'])) {
-      throw new Exception("Prefix 'Herr' or 'Frau' could not be resolved.");
-    }
-    $gender2prefix = array();
-    foreach ($mapping as $prefix_name => $genders) {
-      $prefix_id = $prefixes[$prefix_name];
-      foreach ($genders as $gender_label) {
-        $gender_id = CRM_Core_OptionGroup::getValue('gender', $gender_label, 'label');
-        if (!empty($gender_id)) {
-          $gender2prefix[$gender_id] = $prefix_id;
+  public static function getPrefixMapping(): array {
+    $prefixGenderMapping = [
+      'Frau'   => ['Female', 'männlich'],
+      'Herr' => ['Male', 'weiblich'],
+    ];
+
+    $allowedLabels = [
+      'Frau' => ['Frau', 'Ms.', 'Mrs.', 'Señora'],
+      'Herr'   => ['Herr', 'Mr.', 'Señor'],
+    ];
+
+    /** var array<string,string> $prefixes */
+    $prefixes = [];
+    foreach ($allowedLabels as $prefixName => $prefixOptions) {
+      foreach ($prefixOptions as $prefixOption) {
+        /** var bool|null|string|int $prefixId */
+        $prefixKey = CRM_Core_PseudoConstant::getKey('CRM_Contact_BAO_Contact', 'prefix_id', $prefixOption);
+        if (NULL !== $prefixKey && '' !== (string) $prefixKey) {
+          $prefixes[$prefixName] = (string) $prefixKey;
+          break;
         }
       }
     }
 
-    if (empty($gender2prefix)) {
-      throw new Exception("None of the genders could be resolved.");
+    if (!array_key_exists('Herr', $prefixes) || !array_key_exists('Frau', $prefixes)) {
+      throw new \RuntimeException("Prefix 'Herr' or 'Frau' could not be resolved.");
+    }
+
+    $gender2prefix = [];
+    foreach ($prefixGenderMapping as $prefixName => $genders) {
+      $prefixId = $prefixes[$prefixName];
+      foreach ($genders as $genderLabel) {
+        $genderId = CRM_Core_PseudoConstant::getKey('CRM_Contact_BAO_Contact', 'gender_id', $genderLabel);
+        if (NULL !== $genderId && '' !== (string) $genderId) {
+          $gender2prefix[(string) $genderId] = $prefixId;
+        }
+      }
+    }
+
+    if (0 === count($gender2prefix)) {
+      throw new \RuntimeException('None of the genders could be resolved.');
     }
     return $gender2prefix;
   }
 
   /**
-   * @param $prefix_id
+   * @param string $prefixId
    *
-   * @return mixed
-   * @throws \Exception
+   * @return string
+   * @throws \RuntimeException
    */
-  public static function deriveGenderFromPrefix($prefix_id) {
+  public static function deriveGenderFromPrefix($prefixId): string {
     $genders = static::getGenderMapping();
-    if (!isset($genders[$prefix_id])) {
-      throw new Exception('Prefix could not be resolved.');
+    if (!isset($genders[$prefixId])) {
+      throw new \RuntimeException('Prefix-Id ' . $prefixId . ' could not be resolved.');
     }
-    return $genders[$prefix_id];
+    return $genders[$prefixId];
   }
 
   /**
-   * @param $gender_id
+   * @param string $genderId
    *
-   * @return mixed
-   * @throws \Exception
+   * @return string
+   * @throws \RuntimeException
    */
-  public static function derivePrefixFromGender($gender_id) {
+  public static function derivePrefixFromGender($genderId): string {
     $prefixes = static::getPrefixMapping();
-    if (!isset($prefixes[$gender_id])) {
-      throw new Exception('Gender could not be resolved.');
+    if (!isset($prefixes[$genderId])) {
+      throw new \RuntimeException('Gender-Id ' . $genderId . ' could not be resolved.');
     }
-    return $prefixes[$gender_id];
+    return $prefixes[$genderId];
   }
 
   /**
    * Updates the parameters array when either gender or prefix changed for a
    * given contact.
    *
-   * @param $contact_id
-   * @param $params
+   * @param int $contact_id
+   * @param array<string,string> $params
    */
-  public static function updateGenderOrPrefixParams($contact_id, &$params) {
+  public static function updateGenderOrPrefixParams(int $contact_id, array &$params): void {
     try {
-      if ($contact_id) {
-        // Compare with old values.
-        $old_contact = civicrm_api3('Contact', 'getsingle', array(
-          'id' => $contact_id,
-          'return' => array('gender_id', 'prefix_id')
-        ));
-        if (isset($params['gender_id']) && $old_contact['gender_id'] != $params['gender_id']) {
+      // Compare with old values.
+      $old_contact = civicrm_api3('Contact', 'getsingle', [
+        'id' => $contact_id,
+        'return' => ['gender_id', 'prefix_id'],
+      ]);
+
+      if (is_array($old_contact)) {
+        if (isset($params['gender_id']) && $old_contact['gender_id'] !== $params['gender_id']) {
           $params['prefix_id'] = static::derivePrefixFromGender($params['gender_id']);
         }
-        elseif (isset($params['prefix_id']) && $old_contact['prefix_id'] != $params['prefix_id']) {
+        elseif (isset($params['prefix_id']) && $old_contact['prefix_id'] !== $params['prefix_id']) {
           $params['gender_id'] = static::deriveGenderFromPrefix($params['prefix_id']);
         }
       }
       else {
         // Compare params only, gender preceding.
-        if (!empty($params['gender_id'])) {
-          $params['prefix_id'] = static::derivePrefixFromGender($params['gender_id']);
+        $genderId = $params['gender_id'];
+        $prefixId = $params['prefix_id'];
+        if ('' !== $genderId) {
+          $params['prefix_id'] = static::derivePrefixFromGender($genderId);
         }
-        elseif (!empty($params['prefix_id'])) {
-          $params['gender_id'] = static::deriveGenderFromPrefix($params['prefix_id']);
+        elseif ('' !== $prefixId) {
+          $params['gender_id'] = static::deriveGenderFromPrefix($prefixId);
         }
       }
-
     }
-    catch (Exception $exception) {
+    catch (\RuntimeException $exception) {
+      // @ignoreException
       // If gender or prefix could not be determined, leave them alone.
     }
   }

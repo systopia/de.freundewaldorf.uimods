@@ -1,0 +1,27 @@
+site_name: Freunde Waldorf UI modifications
+site_description: User interface modifications and custom functionality for Freunde Waldorf CiviCRM.
+site_author: SYSTOPIA
+site_url: http://github.com/systopia/de.freundewaldorf.uimods
+
+theme:
+  name: material
+
+nav:
+  - Introduction: index.md
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - def_list
+  - codehilite
+  - toc:
+      permalink: True
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.tilde
+  - pymdownx.betterem
+  - pymdownx.mark
+
+plugins:
+  - search:
+      lang: en

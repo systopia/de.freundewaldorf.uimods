@@ -15,18 +15,24 @@
 | written permission from the original author(s).        |
 +--------------------------------------------------------*/
 
+declare(strict_types = 1);
+
 /**
  * Derive the contact's gender from the prefix given
+ *
+ * @param array<string,string> $params
+ * @return array<string,mixed>
  */
-function civicrm_api3_contact_derivegenderfromprefix($params) {
+function civicrm_api3_contact_derivegenderfromprefix(array $params): array {
   // maximum number to be processed
-  $max_count = (int) CRM_Utils_Array::value('max_count', $params, 500);
+  $max_count = $params['max_count'] ?? 500;
 
   try {
     $prefix2gender = CRM_Uimods_GenderPrefix::getGenderMapping();
+    $and_clause_sql_contact_ids = '';
 
     // Restrict the affected contacts query to the given contact IDs.
-    if (!empty($params['contact_ids'])) {
+    if (isset($params['contact_ids'])) {
       if (!is_array($params['contact_ids'])) {
         $contact_ids = explode(',', $params['contact_ids']);
       }
@@ -41,10 +47,11 @@ function civicrm_api3_contact_derivegenderfromprefix($params) {
         'is_numeric'
       );
       $contact_ids_clause_sql = 'id IN(' . implode(',', $contact_ids) . ')';
+      $and_clause_sql_contact_ids = 'AND ' . $contact_ids_clause_sql;
     }
 
     // create a query to find the contacts affected
-    $gender_clauses = array();
+    $gender_clauses = [];
     foreach ($prefix2gender as $prefix_id => $gender_id) {
       $gender_clauses[] = "prefix_id = {$prefix_id} AND (gender_id != {$gender_id} OR gender_id IS NULL)";
     }
@@ -57,19 +64,21 @@ function civicrm_api3_contact_derivegenderfromprefix($params) {
   WHERE   is_deleted = 0
     AND   contact_type = 'Individual'
     AND {$gender_clause_sql}
-    " . (!empty($contact_ids_clause_sql) ? 'AND ' . $contact_ids_clause_sql : '') . "
+    " . $and_clause_sql_contact_ids . "
     LIMIT $max_count
   ";
+
+    /** @var CRM_Core_DAO $affected_contact  */
     $affected_contact = CRM_Core_DAO::executeQuery($contact_query);
 
     // now collect every one of them into a set of changes
-    $changes = array();
+    $changes = [];
     while ($affected_contact->fetch()) {
       if (isset($prefix2gender[$affected_contact->prefix_id])) {
-        $changes[] = array(
+        $changes[] = [
           'id'        => $affected_contact->id,
           'gender_id' => $prefix2gender[$affected_contact->prefix_id],
-        );
+        ];
       }
     }
 
@@ -87,14 +96,16 @@ function civicrm_api3_contact_derivegenderfromprefix($params) {
 
 /**
  * API3 action specs
+ *
+ * @param array<string, array<string,mixed>> $params
  */
-function _civicrm_api3_contact_derivegenderfromprefix_spec(&$params) {
+function _civicrm_api3_contact_derivegenderfromprefix_spec(array &$params): void {
   $params['max_count']['api.required'] = 0;
-  $params['contact_ids'] = array(
+  $params['contact_ids'] = [
     'name'         => 'contact_ids',
     'title'        => 'Contact IDs',
     'type'         => CRM_Utils_Type::T_STRING,
     'api.required' => 0,
     'description'  => 'A list of contact IDs to act on.',
-  );
+  ];
 }
